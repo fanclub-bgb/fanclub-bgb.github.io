@@ -1,0 +1,13 @@
+.hero-photo {
+  background-image: linear-gradient(90deg, var(--yellow) 0%, transparent 28%), var(--hero-image);
+}
+
+.membership-image {
+  background-image: var(--membership-image);
+}
+
+@media (max-width: 760px) {
+  .hero-photo {
+    background-image: linear-gradient(0deg, var(--yellow), transparent 45%), var(--hero-image);
+  }
+}
