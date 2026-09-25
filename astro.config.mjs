@@ -1,6 +1,6 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://www.fanclub-bgb.de/',
+  site: 'https://fanclub-bgb.github.io/',
   base: '/'
 });
