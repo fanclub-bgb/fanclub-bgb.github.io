@@ -8,6 +8,7 @@ const navItems = [
   { label: 'Über BGB', href: '#about' },
   { label: 'Events', href: '#events' },
   { label: 'Mitgliedschaft', href: '#membership' },
+  { label: 'Mitglieder', href: '#members' },
   { label: 'Kontakt', href: '#contact' }
 ];
 
@@ -87,8 +88,19 @@ const navItems = [
         </div>
       </section>
 
+      <section class="members section-grid" id="members">
+        <div class="section-intro">
+          <p class="eyebrow">04 / Gemeinsam dabei</p>
+          <h2>Unsere<br /><em>Mitglieder.</em></h2>
+          <p class="members-intro">Sortiert nach Teilnahmen in der Saison 2026/27.</p>
+        </div>
+        <div class="member-list" id="member-list">
+          <p class="members-status" id="members-status" role="status" aria-live="polite">Mitglieder werden geladen …</p>
+        </div>
+      </section>
+
       <section class="contact" id="contact">
-        <div><p class="eyebrow">04 / Sag Hallo</p><h2>Auf ein Bier?</h2></div>
+        <div><p class="eyebrow">05 / Sag Hallo</p><h2>Auf ein Bier?</h2></div>
         <div class="contact-details">
           <p>Kontaktiert uns persönlich im Stadion, in der Kneipe oder über unsere Online-Kanäle.</p>
           <a class="email" href="mailto:info@bierguerillabreisgau.de">info@bierguerillabreisgau.de <span aria-hidden="true">↗</span></a>
@@ -127,9 +139,25 @@ const navItems = [
         isPublished: boolean;
       }
 
-      const eventsUrl = 'https://planthegame.ch/Match/e5a30adc-0ded-4511-a10c-17e9078a49bf/2026-27/active/true';
+      interface Member {
+        id: string;
+        name: string;
+        avatar?: string | null;
+        imageURL?: string | null;
+        imageUrl?: string | null;
+        ImageURL?: string | null;
+        ImageUrl?: string | null;
+        deletionTime?: string | null;
+      }
+
+      const apiOrigin = 'https://planthegame.ch';
+      const tenantId = 'e5a30adc-0ded-4511-a10c-17e9078a49bf';
+      const season = '2026-27';
+      const eventsUrl = `${apiOrigin}/Match/${tenantId}/${season}/active/true`;
       const eventList = document.querySelector<HTMLDivElement>('#event-list');
       const eventStatus = document.querySelector<HTMLParagraphElement>('#events-status');
+      const memberList = document.querySelector<HTMLDivElement>('#member-list');
+      const membersStatus = document.querySelector<HTMLParagraphElement>('#members-status');
 
       function isMatch(value: unknown): value is Match {
         if (typeof value !== 'object' || value === null) return false;
@@ -141,6 +169,17 @@ const navItems = [
           && typeof match.awayTeam === 'string'
           && typeof match.doorOpeningTime === 'string'
           && typeof match.isPublished === 'boolean';
+      }
+
+      function isMember(value: unknown): value is Member {
+        if (typeof value !== 'object' || value === null) return false;
+
+        const member = value as Record<string, unknown>;
+        return typeof member.id === 'string'
+          && typeof member.name === 'string'
+          && (member.deletionTime === undefined || member.deletionTime === null || typeof member.deletionTime === 'string')
+          && ['avatar', 'imageURL', 'imageUrl', 'ImageURL', 'ImageUrl'].every((key) =>
+            member[key] === undefined || member[key] === null || typeof member[key] === 'string');
       }
 
       function parseMatchDate(value: string): Date | null {
@@ -228,7 +267,101 @@ const navItems = [
         }
       }
 
+      function showMembersStatus(message: string) {
+        if (membersStatus) membersStatus.textContent = message;
+      }
+
+      function memberImage(member: Member): string {
+        const imagePath = member.ImageURL || member.imageURL || member.imageUrl || member.ImageUrl || '';
+        if (!imagePath) return '';
+
+        const imageUrl = new URL(imagePath, apiOrigin);
+        if (imageUrl.protocol !== 'https:' || imageUrl.origin !== apiOrigin) {
+          throw new Error(`Ungültige Avatar-URL für ${member.name}.`);
+        }
+
+        return imageUrl.href;
+      }
+
+      async function loadMembers() {
+        if (!memberList || !membersStatus) {
+          throw new Error('Mitgliederliste oder Statusanzeige wurde nicht gefunden.');
+        }
+
+        try {
+          const response = await fetch(`${apiOrigin}/Member/${tenantId}`);
+          if (!response.ok) throw new Error(`Member-API antwortete mit HTTP ${response.status}.`);
+
+          const data: unknown = await response.json();
+          if (!Array.isArray(data) || !data.every(isMember)) {
+            throw new Error('Die Member-API hat ein unerwartetes Datenformat zurückgegeben.');
+          }
+
+          const currentMembers = data.filter((member) => member.deletionTime == null);
+          const rankedMembers = await Promise.all(currentMembers.map(async (member) => {
+            const participantResponse = await fetch(
+              `${apiOrigin}/Participant/${tenantId}/${season}/name/${encodeURIComponent(member.name.trim())}`
+            );
+            if (!participantResponse.ok) {
+              throw new Error(`Participant-API für ${member.name} antwortete mit HTTP ${participantResponse.status}.`);
+            }
+
+            const participants: unknown = await participantResponse.json();
+            if (!Array.isArray(participants)) {
+              throw new Error(`Die Participant-API für ${member.name} hat ein unerwartetes Datenformat zurückgegeben.`);
+            }
+
+            return { member, participations: participants.length };
+          }));
+
+          rankedMembers.sort((a, b) => b.participations - a.participations || a.member.name.localeCompare(b.member.name, 'de'));
+          memberList.replaceChildren();
+
+          if (rankedMembers.length === 0) {
+            showMembersStatus('Aktuell sind keine Mitglieder eingetragen.');
+            return;
+          }
+
+          for (const { member, participations } of rankedMembers) {
+            const row = document.createElement('article');
+            row.className = 'member-row';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'member-avatar';
+            const initials = document.createElement('span');
+            initials.textContent = member.name.trim().slice(0, 1).toLocaleUpperCase('de-DE');
+            avatar.append(initials);
+
+            const imageUrl = memberImage(member);
+            if (imageUrl) {
+              const image = document.createElement('img');
+              image.src = imageUrl;
+              image.alt = '';
+              image.loading = 'lazy';
+              initials.hidden = true;
+              image.addEventListener('error', () => {
+                image.remove();
+                initials.hidden = false;
+              }, { once: true });
+              avatar.append(image);
+            }
+
+            const name = document.createElement('h3');
+            name.textContent = member.name.trim();
+            const count = document.createElement('p');
+            count.textContent = `${participations} ${participations === 1 ? 'Teilnahme' : 'Teilnahmen'}`;
+            row.append(avatar, name, count);
+            memberList.append(row);
+          }
+        } catch (error) {
+          console.error('Mitglieder konnten nicht geladen werden.', error);
+          memberList.replaceChildren();
+          showMembersStatus('Die Mitglieder konnten gerade nicht geladen werden. Bitte versuche es später erneut.');
+        }
+      }
+
       loadEvents();
+      loadMembers();
     </script>
 
     <footer><span>© Bier Guerilla Breisgau</span><span>NUR DER SCF <b>✦</b></span><span>Freiburg im Breisgau</span></footer>
