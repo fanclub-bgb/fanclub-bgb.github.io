@@ -11,13 +11,6 @@ const navItems = [
   { label: 'Kontakt', href: '#contact' }
 ];
 
-const events = [
-  { date: '25', month: 'OKT', title: 'Gemeinsam ins Stadion - Bundesliga Spieltag 7 von 34', detail: 'SCF vs. Bayern München' },
-  { date: '28', month: 'OKT', title: 'Gemeinsam ins Stadion - DFB Pokal 2. Runde', detail: 'SCF vs. Wolfsburg' },
-  { date: '08', month: 'NOV', title: 'Gemeinsam ins Stadion - Bundesliga Spieltag 9 von 34', detail: 'SCF vs. Union Berlin' },
-  { date: '26', month: 'NOV', title: 'Gemeinsam ins Stadion - UEFA Conference League Spieltag 4 von 6', detail: 'SCF vs. Twente' },
-  { date: '29', month: 'NOV', title: 'Gemeinsam ins Stadion - Bundesliga Spieltag 11 von 34', detail: 'SCF vs. Leipzig' }
-];
 ---
 
 <!doctype html>
@@ -76,13 +69,8 @@ const events = [
           <p class="eyebrow">02 / Auf dem Zettel</p>
           <h2>Die nächsten<br /><em>Treffen.</em></h2>
         </div>
-        <div class="event-list">
-          {events.map((event) => (
-            <article class="event-row">
-              <div class="event-date"><strong>{event.date}</strong><span>{event.month}</span></div>
-              <div><h3>{event.title}</h3><h4>{event.detail}</h4></div>
-            </article>
-          ))}
+        <div class="event-list" id="event-list">
+          <p class="events-status" id="events-status" role="status" aria-live="polite">Termine werden geladen …</p>
         </div>
       </section>
 
@@ -128,6 +116,120 @@ const events = [
         </div>
       </section>
     </main>
+
+    <script>
+      interface Match {
+        name: string;
+        date: string;
+        homeTeam: string;
+        awayTeam: string;
+        doorOpeningTime: string;
+        isPublished: boolean;
+      }
+
+      const eventsUrl = 'https://planthegame.ch/Match/e5a30adc-0ded-4511-a10c-17e9078a49bf/2026-27/active/true';
+      const eventList = document.querySelector<HTMLDivElement>('#event-list');
+      const eventStatus = document.querySelector<HTMLParagraphElement>('#events-status');
+
+      function isMatch(value: unknown): value is Match {
+        if (typeof value !== 'object' || value === null) return false;
+
+        const match = value as Record<string, unknown>;
+        return typeof match.name === 'string'
+          && typeof match.date === 'string'
+          && typeof match.homeTeam === 'string'
+          && typeof match.awayTeam === 'string'
+          && typeof match.doorOpeningTime === 'string'
+          && typeof match.isPublished === 'boolean';
+      }
+
+      function parseMatchDate(value: string): Date | null {
+        const parts = /^(\d{2})\.(\d{2})\.(\d{4})\s*-\s*(\d{2}):(\d{2})$/.exec(value);
+        if (!parts) return null;
+
+        const [, dayText, monthText, yearText, hourText, minuteText] = parts;
+        const day = Number(dayText);
+        const month = Number(monthText);
+        const year = Number(yearText);
+        const hour = Number(hourText);
+        const minute = Number(minuteText);
+        const date = new Date(year, month - 1, day, hour, minute);
+
+        if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day
+          || date.getHours() !== hour || date.getMinutes() !== minute) {
+          return null;
+        }
+
+        return date;
+      }
+
+      function showEventStatus(message: string) {
+        if (eventStatus) eventStatus.textContent = message;
+      }
+
+      async function loadEvents() {
+        if (!eventList || !eventStatus) {
+          throw new Error('Event-Liste oder Statusanzeige wurde nicht gefunden.');
+        }
+
+        try {
+          const response = await fetch(eventsUrl);
+          if (!response.ok) throw new Error(`Event-API antwortete mit HTTP ${response.status}.`);
+
+          const data: unknown = await response.json();
+          if (!Array.isArray(data) || !data.every(isMatch)) {
+            throw new Error('Die Event-API hat ein unerwartetes Datenformat zurückgegeben.');
+          }
+
+          const events = data
+            .filter((match) => match.isPublished)
+            .map((match) => ({ match, date: parseMatchDate(match.date) }))
+            .map(({ match, date }) => {
+              if (!date) throw new Error(`Ungültiges Event-Datum: ${match.date}`);
+              return { match, date };
+            })
+            .filter(({ date }) => date.getTime() >= Date.now())
+            .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+          eventList.replaceChildren();
+
+          if (events.length === 0) {
+            showEventStatus('Aktuell sind keine kommenden Termine veröffentlicht.');
+            return;
+          }
+
+          for (const { match, date } of events) {
+            const row = document.createElement('article');
+            row.className = 'event-row';
+
+            const eventDate = document.createElement('div');
+            eventDate.className = 'event-date';
+            const day = document.createElement('strong');
+            day.textContent = new Intl.DateTimeFormat('de-DE', { day: '2-digit' }).format(date);
+            const month = document.createElement('span');
+            month.textContent = new Intl.DateTimeFormat('de-DE', { month: 'short' }).format(date).replace('.', '').toUpperCase();
+            eventDate.append(day, month);
+
+            const details = document.createElement('div');
+            const title = document.createElement('h3');
+            title.textContent = `${match.homeTeam.replaceAll('_', ' ') === 'Freiburg' ? 'Gemeinsam ins Stadion' : 'Auswärtssieg'}: ${match.name.trim()}`;
+            const subtitle = document.createElement('p');
+            const kickoff = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(date);
+            const doorOpening = match.doorOpeningTime.trim();
+            subtitle.textContent = `· Anpfiff ${kickoff} Uhr${doorOpening ? ` · Einlass ${doorOpening} Uhr` : ''}`;
+            details.append(title, subtitle);
+            row.append(eventDate, details);
+            eventList.append(row);
+          }
+        } catch (error) {
+          console.error('Termine konnten nicht geladen werden.', error);
+          eventList.replaceChildren();
+          showEventStatus('Die Termine konnten gerade nicht geladen werden. Bitte versuche es später erneut.');
+        }
+      }
+
+      loadEvents();
+    </script>
 
     <footer><span>© Bier Guerilla Breisgau</span><span>NUR DER SCF <b>✦</b></span><span>Freiburg im Breisgau</span></footer>
   </body>
