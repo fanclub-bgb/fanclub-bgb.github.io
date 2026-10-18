@@ -8,15 +8,15 @@ const navItems = [
   { label: 'Über BGB', href: '#about' },
   { label: 'Mitgliedschaft', href: '#membership' },
   { label: 'Events', href: '#events' },
-  { label: 'Schwimmnudeln', href: '#shop' },
   { label: 'Kontakt', href: '#contact' }
 ];
 
 const events = [
-  { date: '11', month: 'OKT', title: 'Gemeinsam ins Stadion - Bundesliga Spieltag 5 von 34', detail: 'SCF vs. Schalke' },
-  { date: '15', month: 'OKT', title: 'Gemeinsam ins Stadion - UEFA Conference League Spieltag 1 von 6', detail: 'SCF vs. FK Jablonec' },
   { date: '25', month: 'OKT', title: 'Gemeinsam ins Stadion - Bundesliga Spieltag 7 von 34', detail: 'SCF vs. Bayern München' },
-  { date: '28', month: 'OKT', title: 'Gemeinsam ins Stadion - DFB Pokal 2. Runde', detail: 'SCF vs. Wolfsburg' }
+  { date: '28', month: 'OKT', title: 'Gemeinsam ins Stadion - DFB Pokal 2. Runde', detail: 'SCF vs. Wolfsburg' },
+  { date: '08', month: 'NOV', title: 'Gemeinsam ins Stadion - Bundesliga Spieltag 9 von 34', detail: 'SCF vs. Union Berlin' },
+  { date: '26', month: 'NOV', title: 'Gemeinsam ins Stadion - UEFA Conference League Spieltag 4 von 6', detail: 'SCF vs. Twente' },
+  { date: '29', month: 'NOV', title: 'Gemeinsam ins Stadion - Bundesliga Spieltag 11 von 34', detail: 'SCF vs. Leipzig' }
 ];
 ---
 
@@ -100,18 +100,8 @@ const events = [
         </div>
       </section>
 
-      <section class="shop section-grid" id="shop">
-        <div class="shop-image"><img src={`${base}assets/Schwimmnudeln.jpg`} alt="BGB Schwimmnudeln in Vereinsfarben" /></div>
-        <div class="shop-copy">
-          <p class="eyebrow">04 / Fanartikel</p>
-          <h2>Schwimmnudeln<br /><em>für den Spieltag.</em></h2>
-          <p>Unser Klassiker ist zurück. Wenn du einen unserer Fanartikel möchtest, sprich uns im Stadion an oder schreib uns über die Online-Kanäle.</p>
-          <a class="text-link red-link" href="#contact">Kontakt aufnehmen <span aria-hidden="true">→</span></a>
-        </div>
-      </section>
-
       <section class="contact" id="contact">
-        <div><p class="eyebrow">05 / Sag Hallo</p><h2>Auf ein Bier?</h2></div>
+        <div><p class="eyebrow">04 / Sag Hallo</p><h2>Auf ein Bier?</h2></div>
         <div class="contact-details">
           <p>Kontaktiert uns persönlich im Stadion, in der Kneipe oder über unsere Online-Kanäle.</p>
           <a class="email" href="mailto:info@bierguerillabreisgau.de">info@bierguerillabreisgau.de <span aria-hidden="true">↗</span></a>

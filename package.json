@@ -7,7 +7,10 @@
     "build": "astro build",
     "preview": "astro preview"
   },
+  "engines": {
+    "node": ">=22.22.0"
+  },
   "dependencies": {
-    "astro": "^5.16.0"
+    "astro": "7.4.0"
   }
 }
