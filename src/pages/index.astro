@@ -39,7 +39,7 @@ const navItems = [
       <section class="hero" aria-labelledby="hero-title" style={`--hero-image: url('${base}assets/titleimage.png')`}>
         <div class="hero-copy">
           <p class="eyebrow">Fanclub des SC Freiburg · Seit 2013</p>
-          <h1 id="hero-title">Fußball.<br /><em>Freundschaft.</em><br />Freiburg.</h1>
+          <h1 id="hero-title">Fußball.<br /><em>Freunde.</em><br />Freiburg.</h1>
           <p class="hero-lead">Wir sind Bier Guerilla Breisgau. Eine Gemeinschaft für alle, die Stadionluft, gute Leute und ein kühles Bier lieben.</p>
           <div class="hero-actions">
             <a class="button button-red" href="#about">BGB kennenlernen <span aria-hidden="true">↓</span></a>
@@ -136,6 +136,8 @@ const navItems = [
       </section>
     </main>
 
+    <button class="back-to-top" id="back-to-top" type="button" aria-label="Zurück nach ganz oben" hidden>TOP ↑</button>
+
     <script>
       interface Match {
         name: string;
@@ -164,6 +166,7 @@ const navItems = [
       const membersMore = document.querySelector<HTMLButtonElement>('#members-more');
       const memberCount = document.querySelector<HTMLElement>('#member-count');
       const beerIconTemplate = document.querySelector<HTMLTemplateElement>('#beer-icon-template');
+      const backToTop = document.querySelector<HTMLButtonElement>('#back-to-top');
 
       function isMatch(value: unknown): value is Match {
         if (typeof value !== 'object' || value === null) return false;
@@ -381,6 +384,19 @@ const navItems = [
         });
         membersMore.setAttribute('aria-expanded', String(!expanded));
         membersMore.textContent = expanded ? 'Mehr anzeigen' : 'Weniger anzeigen';
+      });
+
+      function updateBackToTopVisibility() {
+        if (backToTop) backToTop.hidden = window.scrollY < window.innerHeight;
+      }
+
+      window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
+      updateBackToTopVisibility();
+      backToTop?.addEventListener('click', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        });
       });
 
       loadEvents();
