@@ -95,6 +95,7 @@ const navItems = [
         </div>
         <div class="member-list" id="member-list">
           <p class="members-status" id="members-status" role="status" aria-live="polite">Mitglieder werden geladen …</p>
+          <button class="members-more" id="members-more" type="button" aria-expanded="false" hidden>Mehr anzeigen</button>
         </div>
         <template id="beer-icon-template">
           <svg aria-hidden="true" viewBox="0 0 32 32" fill="none">
@@ -160,6 +161,7 @@ const navItems = [
       const eventStatus = document.querySelector<HTMLParagraphElement>('#events-status');
       const memberList = document.querySelector<HTMLDivElement>('#member-list');
       const membersStatus = document.querySelector<HTMLParagraphElement>('#members-status');
+      const membersMore = document.querySelector<HTMLButtonElement>('#members-more');
       const memberCount = document.querySelector<HTMLElement>('#member-count');
       const beerIconTemplate = document.querySelector<HTMLTemplateElement>('#beer-icon-template');
 
@@ -287,8 +289,8 @@ const navItems = [
       }
 
       async function loadMembers() {
-        if (!memberList || !membersStatus) {
-          throw new Error('Mitgliederliste oder Statusanzeige wurde nicht gefunden.');
+        if (!memberList || !membersStatus || !membersMore) {
+          throw new Error('Mitgliederliste, Statusanzeige oder Mehr-Anzeigen-Schaltfläche wurde nicht gefunden.');
         }
 
         try {
@@ -322,13 +324,15 @@ const navItems = [
           memberList.replaceChildren();
 
           if (rankedMembers.length === 0) {
+            memberList.replaceChildren(membersStatus);
             showMembersStatus('Aktuell sind keine Mitglieder eingetragen.');
             return;
           }
 
-          for (const { member, participations } of rankedMembers) {
+          rankedMembers.forEach(({ member, participations }, index) => {
             const row = document.createElement('article');
             row.className = 'member-row';
+            row.hidden = index >= 10;
 
             const avatar = document.createElement('div');
             avatar.className = 'member-avatar';
@@ -359,13 +363,25 @@ const navItems = [
             if (beerIconTemplate) count.append(beerIconTemplate.content.cloneNode(true));
             row.append(avatar, name, count);
             memberList.append(row);
-          }
+          });
+          memberList.append(membersMore);
+          membersMore.hidden = rankedMembers.length <= 10;
         } catch (error) {
           console.error('Mitglieder konnten nicht geladen werden.', error);
-          memberList.replaceChildren();
+          memberList.replaceChildren(membersStatus);
+          membersMore.hidden = true;
           showMembersStatus('Die Mitglieder konnten gerade nicht geladen werden. Bitte versuche es später erneut.');
         }
       }
+
+      membersMore?.addEventListener('click', () => {
+        const expanded = membersMore.getAttribute('aria-expanded') === 'true';
+        memberList?.querySelectorAll<HTMLElement>('.member-row').forEach((row, index) => {
+          if (index >= 10) row.hidden = expanded;
+        });
+        membersMore.setAttribute('aria-expanded', String(!expanded));
+        membersMore.textContent = expanded ? 'Mehr anzeigen' : 'Weniger anzeigen';
+      });
 
       loadEvents();
       loadMembers();
