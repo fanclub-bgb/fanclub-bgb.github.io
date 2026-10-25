@@ -20,7 +20,7 @@ const navItems = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content="Bier Guerilla Breisgau – der Fanclub des SC Freiburg." />
-    <link rel="icon" type="image/png" href={`${base}favicon.ico`} />
+    <link rel="icon" type="image/x-icon" href={`${base}favicon.ico`} />
     <title>Bier Guerilla Breisgau</title>
   </head>
   <body>
@@ -36,6 +36,14 @@ const navItems = [
     </header>
 
     <main id="top">
+      <section class="match-of-day" id="match-of-day" aria-labelledby="match-of-day-title" hidden>
+        <div class="match-of-day-heading">
+          <p class="eyebrow">Heute im Fokus</p>
+          <h2 id="match-of-day-title">Match of the day</h2>
+        </div>
+        <div class="match-of-day-fixture" id="match-of-day-fixture"></div>
+      </section>
+
       <section class="hero" aria-labelledby="hero-title" style={`--hero-image: url('${base}assets/titleimage.png')`}>
         <div class="hero-copy">
           <p class="eyebrow">Fanclub des SC Freiburg · Seit 2013</p>
@@ -161,6 +169,8 @@ const navItems = [
       const eventsUrl = `${apiOrigin}/Match/${tenantId}/${season}/active/true`;
       const eventList = document.querySelector<HTMLDivElement>('#event-list');
       const eventStatus = document.querySelector<HTMLParagraphElement>('#events-status');
+      const matchOfDay = document.querySelector<HTMLElement>('#match-of-day');
+      const matchOfDayFixture = document.querySelector<HTMLDivElement>('#match-of-day-fixture');
       const memberList = document.querySelector<HTMLDivElement>('#member-list');
       const membersStatus = document.querySelector<HTMLParagraphElement>('#members-status');
       const membersMore = document.querySelector<HTMLButtonElement>('#members-more');
@@ -214,6 +224,48 @@ const navItems = [
         if (eventStatus) eventStatus.textContent = message;
       }
 
+      function isToday(date: Date): boolean {
+        const today = new Date();
+        return date.getFullYear() === today.getFullYear()
+          && date.getMonth() === today.getMonth()
+          && date.getDate() === today.getDate();
+      }
+
+      function renderMatchOfDay(match: Match, date: Date) {
+        if (!matchOfDay || !matchOfDayFixture) {
+          throw new Error('Match-of-the-day-Anzeige wurde nicht gefunden.');
+        }
+
+        const fixture = document.createElement('div');
+        fixture.className = 'match-of-day-teams';
+
+        for (const team of [match.homeTeam, match.awayTeam]) {
+          const teamElement = document.createElement('div');
+          teamElement.className = 'match-of-day-team';
+          const image = document.createElement('img');
+          image.src = `${apiOrigin}/images/teams/${encodeURIComponent(team)}.svg`;
+          image.alt = '';
+          image.addEventListener('error', () => image.remove(), { once: true });
+          const name = document.createElement('span');
+          name.textContent = team.replaceAll('_', ' ');
+          teamElement.append(image, name);
+          fixture.append(teamElement);
+        }
+
+        const versus = document.createElement('span');
+        versus.className = 'match-of-day-versus';
+        versus.textContent = 'vs.';
+        fixture.insertBefore(versus, fixture.children[1]);
+
+        const kickoff = document.createElement('p');
+        kickoff.className = 'match-of-day-kickoff';
+        kickoff.textContent = `Anpfiff ${new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(date)} Uhr`;
+        fixture.append(kickoff);
+
+        matchOfDayFixture.replaceChildren(fixture);
+        matchOfDay.hidden = false;
+      }
+
       async function loadEvents() {
         if (!eventList || !eventStatus) {
           throw new Error('Event-Liste oder Statusanzeige wurde nicht gefunden.');
@@ -228,19 +280,24 @@ const navItems = [
             throw new Error('Die Event-API hat ein unerwartetes Datenformat zurückgegeben.');
           }
 
-          const events = data
+          const publishedEvents = data
             .filter((match) => match.isPublished)
             .map((match) => ({ match, date: parseMatchDate(match.date) }))
             .map(({ match, date }) => {
               if (!date) throw new Error(`Ungültiges Event-Datum: ${match.date}`);
               return { match, date };
-            })
+            });
+          const matchOfDayEvent = publishedEvents.find(({ date }) => isToday(date));
+          if (matchOfDayEvent) renderMatchOfDay(matchOfDayEvent.match, matchOfDayEvent.date);
+
+          const events = publishedEvents
             .filter(({ date }) => date.getTime() >= Date.now())
             .sort((a, b) => a.date.getTime() - b.date.getTime());
 
           eventList.replaceChildren();
 
           if (events.length === 0) {
+            eventList.append(eventStatus);
             showEventStatus('Aktuell sind keine kommenden Termine veröffentlicht.');
             return;
           }
@@ -271,6 +328,7 @@ const navItems = [
         } catch (error) {
           console.error('Termine konnten nicht geladen werden.', error);
           eventList.replaceChildren();
+          eventList.append(eventStatus);
           showEventStatus('Die Termine konnten gerade nicht geladen werden. Bitte versuche es später erneut.');
         }
       }
