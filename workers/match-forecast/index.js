@@ -106,7 +106,7 @@ export default {
 
       failureStage = 'Match-API';
       const today = berlinDate();
-      const cacheKey = new Request(`https://match-of-the-day-cache.invalid/v2/${today}`);
+      const cacheKey = new Request(`https://match-of-the-day-cache.invalid/${today}`);
       const cached = await caches.default.match(cacheKey);
       if (cached) return withCors(cached, origin);
 
