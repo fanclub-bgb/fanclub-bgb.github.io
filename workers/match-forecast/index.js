@@ -126,7 +126,9 @@ export default {
       const awayTeam = teamName(match.awayTeam);
       if (!homeTeam || !awayTeam) throw new Error('Die Teamnamen des Matches sind ungültig.');
 
+
       failureStage = 'OpenAI-API';
+
       const predictionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -142,14 +144,19 @@ export default {
             },
             {
               role: 'user',
-              content: JSON.stringify({ homeTeam, awayTeam, matchDate: match.date })
+              content: JSON.stringify({
+                homeTeam,
+                awayTeam,
+                matchDate: match.date
+              })
             }
           ],
           response_format: { type: 'json_object' },
-          max_tokens: 200,
-          temperature: 0.4
+          max_completion_tokens: 400,
+          reasoning_effort: 'low'
         })
       });
+
       if (!predictionResponse.ok) {
         console.error(`OpenAI-API antwortete mit HTTP ${predictionResponse.status}.`);
         return jsonResponse({
