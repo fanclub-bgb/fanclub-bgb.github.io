@@ -20,6 +20,7 @@ const navItems = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content="Bier Guerilla Breisgau – der Fanclub des SC Freiburg." />
+    <meta name="match-forecast-api" content={import.meta.env.PUBLIC_MATCH_FORECAST_URL ?? ''} />
     <link rel="icon" type="image/x-icon" href={`${base}favicon.ico`} />
     <title>Bier Guerilla Breisgau</title>
   </head>
@@ -42,6 +43,7 @@ const navItems = [
           <h2 id="match-of-day-title">Match of the day</h2>
         </div>
         <div class="match-of-day-fixture" id="match-of-day-fixture"></div>
+        <div class="match-of-day-forecast" id="match-of-day-forecast" hidden></div>
       </section>
 
       <section class="hero" aria-labelledby="hero-title" style={`--hero-image: url('${base}assets/titleimage.png')`}>
@@ -171,6 +173,8 @@ const navItems = [
       const eventStatus = document.querySelector<HTMLParagraphElement>('#events-status');
       const matchOfDay = document.querySelector<HTMLElement>('#match-of-day');
       const matchOfDayFixture = document.querySelector<HTMLDivElement>('#match-of-day-fixture');
+      const matchOfDayForecast = document.querySelector<HTMLDivElement>('#match-of-day-forecast');
+      const forecastApiUrl = document.querySelector<HTMLMetaElement>('meta[name="match-forecast-api"]')?.content.trim() ?? '';
       const memberList = document.querySelector<HTMLDivElement>('#member-list');
       const membersStatus = document.querySelector<HTMLParagraphElement>('#members-status');
       const membersMore = document.querySelector<HTMLButtonElement>('#members-more');
@@ -225,14 +229,21 @@ const navItems = [
       }
 
       function isToday(date: Date): boolean {
-        const today = new Date();
-        return date.getFullYear() === today.getFullYear()
-          && date.getMonth() === today.getMonth()
-          && date.getDate() === today.getDate();
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Berlin',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        const toBerlinDate = (value: Date) => {
+          const parts = Object.fromEntries(formatter.formatToParts(value).map(({ type, value: part }) => [type, part]));
+          return `${parts.year}-${parts.month}-${parts.day}`;
+        };
+        return toBerlinDate(date) === toBerlinDate(new Date());
       }
 
       function renderMatchOfDay(match: Match, date: Date) {
-        if (!matchOfDay || !matchOfDayFixture) {
+        if (!matchOfDay || !matchOfDayFixture || !matchOfDayForecast) {
           throw new Error('Match-of-the-day-Anzeige wurde nicht gefunden.');
         }
 
@@ -262,8 +273,52 @@ const navItems = [
         kickoff.textContent = `Anpfiff ${new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(date)} Uhr`;
         fixture.append(kickoff);
 
-        matchOfDayFixture.replaceChildren(fixture);
+        matchOfDayFixture.replaceChildren(fixture, matchOfDayForecast);
         matchOfDay.hidden = false;
+        void loadMatchForecast();
+      }
+
+      async function loadMatchForecast() {
+        if (!matchOfDayForecast) {
+          throw new Error('Prognoseanzeige wurde nicht gefunden.');
+        }
+
+        const title = document.createElement('h3');
+        title.textContent = 'KI-Prognose';
+        const status = document.createElement('p');
+        status.className = 'match-of-day-forecast-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        const disclaimer = document.createElement('p');
+        disclaimer.className = 'match-of-day-disclaimer';
+        disclaimer.textContent = 'Unverbindliche Einschätzung, nur auf Basis der Begegnung – keine aktuellen Form-, Verletzungs- oder Statistikdaten.';
+        matchOfDayForecast.replaceChildren(title, status, disclaimer);
+        matchOfDayForecast.hidden = false;
+
+        if (!forecastApiUrl) {
+          status.textContent = 'Die KI-Prognose ist noch nicht eingerichtet.';
+          return;
+        }
+
+        status.textContent = 'Prognose wird erstellt …';
+        try {
+          const endpoint = new URL(forecastApiUrl);
+          if (endpoint.protocol !== 'https:') throw new Error('Die Prognose-API muss HTTPS verwenden.');
+
+          const response = await fetch(endpoint);
+          if (!response.ok) throw new Error(`Prognose-API antwortete mit HTTP ${response.status}.`);
+
+          const data: unknown = await response.json();
+          if (typeof data !== 'object' || data === null
+            || !('prediction' in data) || typeof data.prediction !== 'string') {
+            throw new Error('Die Prognose-API hat ein unerwartetes Datenformat zurückgegeben.');
+          }
+
+          status.textContent = data.prediction;
+        } catch (error) {
+          console.error('KI-Prognose konnte nicht geladen werden.', error);
+          status.textContent = 'Die KI-Prognose ist gerade nicht verfügbar.';
+        }
       }
 
       async function loadEvents() {
