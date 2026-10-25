@@ -302,16 +302,23 @@ const navItems = [
 
         status.textContent = 'Prognose wird erstellt …';
         try {
-          const endpoint = new URL(forecastApiUrl);
+          const endpointUrl = /^[a-z][a-z\d+.-]*:\/\//i.test(forecastApiUrl)
+            ? forecastApiUrl
+            : `https://${forecastApiUrl}`;
+          const endpoint = new URL(endpointUrl);
           if (endpoint.protocol !== 'https:') throw new Error('Die Prognose-API muss HTTPS verwenden.');
 
           const response = await fetch(endpoint);
-          if (!response.ok) throw new Error(`Prognose-API antwortete mit HTTP ${response.status}.`);
-
           const data: unknown = await response.json();
           if (typeof data !== 'object' || data === null
-            || !('prediction' in data) || typeof data.prediction !== 'string') {
+            || (response.ok && (!('prediction' in data) || typeof data.prediction !== 'string'))
+            || (!response.ok && (!('error' in data) || typeof data.error !== 'string'))) {
             throw new Error('Die Prognose-API hat ein unerwartetes Datenformat zurückgegeben.');
+          }
+
+          if (!response.ok) {
+            status.textContent = data.error;
+            return;
           }
 
           status.textContent = data.prediction;

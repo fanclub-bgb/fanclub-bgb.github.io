@@ -19,7 +19,7 @@ This Cloudflare Worker reads today's published match from the existing match API
 
    Wrangler prints the Worker URL after deployment. The forecast endpoint is that URL followed by `/api/forecast`.
 
-3. In the GitHub repository settings, add the Actions **repository variable** `MATCH_FORECAST_URL` with the complete HTTPS endpoint, for example `https://bgb-match-of-day-forecast.<workers-subdomain>.workers.dev/api/forecast`.
+3. In the GitHub repository settings, add the Actions **repository variable** `MATCH_FORECAST_URL` with the complete HTTPS endpoint, for example `https://bgb-match-of-day-forecast.<workers-subdomain>.workers.dev/api/forecast`. The site also accepts a host/path without the `https://` prefix and adds HTTPS automatically.
 
 4. Push or manually run the GitHub Pages workflow to rebuild the site with the endpoint configured.
 

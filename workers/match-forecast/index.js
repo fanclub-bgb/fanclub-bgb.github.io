@@ -88,6 +88,7 @@ export default {
       return jsonResponse({ error: 'Not found.' }, 404, origin);
     }
 
+    let failureStage = 'Rate-Limit-Prüfung';
     try {
       if (!env.OPENAI_API_KEY) {
         return jsonResponse({ error: 'Die KI-Prognose ist noch nicht konfiguriert.' }, 503, origin, {
@@ -103,6 +104,7 @@ export default {
         });
       }
 
+      failureStage = 'Match-API';
       const today = berlinDate();
       const cacheKey = new Request(`https://match-of-the-day-cache.invalid/${today}`);
       const cached = await caches.default.match(cacheKey);
@@ -124,6 +126,7 @@ export default {
       const awayTeam = teamName(match.awayTeam);
       if (!homeTeam || !awayTeam) throw new Error('Die Teamnamen des Matches sind ungültig.');
 
+      failureStage = 'OpenAI-API';
       const predictionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -148,9 +151,13 @@ export default {
         })
       });
       if (!predictionResponse.ok) {
-        throw new Error(`OpenAI-API antwortete mit HTTP ${predictionResponse.status}.`);
+        console.error(`OpenAI-API antwortete mit HTTP ${predictionResponse.status}.`);
+        return jsonResponse({
+          error: `OpenAI-API antwortete mit HTTP ${predictionResponse.status}. Bitte API-Key, Modellzugriff und API-Guthaben prüfen.`
+        }, 502, origin, { 'Cache-Control': 'no-store' });
       }
 
+      failureStage = 'Verarbeitung der KI-Antwort';
       const predictionData = await predictionResponse.json();
       const content = predictionData.choices?.[0]?.message?.content;
       if (typeof content !== 'string') throw new Error('OpenAI lieferte keine Prognose.');
@@ -172,8 +179,8 @@ export default {
       context.waitUntil(caches.default.put(cacheKey, cacheResponse));
       return response;
     } catch (error) {
-      console.error('Match-Prognose konnte nicht erstellt werden.', error);
-      return jsonResponse({ error: 'Die KI-Prognose ist gerade nicht verfügbar.' }, 502, origin, {
+      console.error(`Match-Prognose fehlgeschlagen (${failureStage}).`, error);
+      return jsonResponse({ error: `Die KI-Prognose ist gerade nicht verfügbar (${failureStage}).` }, 502, origin, {
         'Cache-Control': 'no-store'
       });
     }
