@@ -284,19 +284,17 @@ const navItems = [
         }
 
         const title = document.createElement('h3');
-        title.textContent = 'KI-Prognose';
+        title.textContent = 'Prognose';
         const status = document.createElement('p');
         status.className = 'match-of-day-forecast-status';
         status.setAttribute('role', 'status');
         status.setAttribute('aria-live', 'polite');
         const disclaimer = document.createElement('p');
-        disclaimer.className = 'match-of-day-disclaimer';
-        disclaimer.textContent = 'Unverbindliche Einschätzung, nur auf Basis der Begegnung – keine aktuellen Form-, Verletzungs- oder Statistikdaten.';
         matchOfDayForecast.replaceChildren(title, status, disclaimer);
         matchOfDayForecast.hidden = false;
 
         if (!forecastApiUrl) {
-          status.textContent = 'Die KI-Prognose ist noch nicht eingerichtet.';
+          status.textContent = 'Die Prognose ist noch nicht eingerichtet.';
           return;
         }
 
@@ -323,8 +321,8 @@ const navItems = [
 
           status.textContent = data.prediction;
         } catch (error) {
-          console.error('KI-Prognose konnte nicht geladen werden.', error);
-          status.textContent = 'Die KI-Prognose ist gerade nicht verfügbar.';
+          console.error('Prognose konnte nicht geladen werden.', error);
+          status.textContent = 'Die Prognose ist gerade nicht verfügbar.';
         }
       }
 
