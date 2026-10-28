@@ -140,7 +140,7 @@ export default {
           messages: [
             {
               role: 'system',
-              content: 'Schreibe auf Deutsch einen unterhaltsamen, trocken-humorvollen und leicht sarkastischen Fußball-Tipp aus der Perspektive eines leidenschaftlichen SC-Freiburg-Fans, ohne diese Perspektive ausdrücklich zu erwähnen. Nutze ausschließlich die übergebenen Teamnamen und die Information, dass sie heute gegeneinander spielen, erfinde keine Fakten und formuliere eine ausdrücklich spekulative Einschätzung in 2–3 Sätzen als gültiges JSON-Objekt mit genau einem String-Feld namens "prediction".'
+              content: 'Schreibe auf Deutsch einen unterhaltsamen, trocken-humorvollen und leicht sarkastischen Fußball-Tipp. Nutze ausschließlich die übergebenen Teamnamen und die Information, dass sie heute gegeneinander spielen, erfinde keine Fakten und formuliere eine ausdrücklich spekulative Einschätzung in 1–2 Sätzen als gültiges JSON-Objekt mit genau einem String-Feld namens "prediction".'
             },
             {
               role: 'user',
@@ -152,7 +152,7 @@ export default {
             }
           ],
           response_format: { type: 'json_object' },
-          max_completion_tokens: 400,
+          max_completion_tokens: 120,
           reasoning_effort: 'low'
         })
       });
