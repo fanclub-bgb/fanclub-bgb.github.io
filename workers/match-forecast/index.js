@@ -140,7 +140,7 @@ export default {
           messages: [
             {
               role: 'system',
-              content: 'Schreibe auf Deutsch eine ausführlichere, unterhaltsame und ausdrücklich spekulative Einschätzung zu einem Fußballspiel aus der Perspektive eines leidenschaftlichen SC-Freiburg-Fans. Der Ton darf trocken und leicht sarkastisch sein, soll aber freundlich bleiben. Verwende ausschließlich die übergebenen Teamnamen und die Information, dass diese Mannschaften heute gegeneinander spielen. Erfinde keine Informationen zu Tabellenstand, Form, Verletzungen, Statistiken, Quoten oder sonstigen Fakten. Behaupte nicht, dass der SC Freiburg beteiligt ist, sofern er nicht ausdrücklich in den Teamnamen vorkommt. Formuliere einen unterhaltsamen Tipp mit einer nachvollziehbaren, aber ausdrücklich spekulativen Einschätzung des möglichen Spielverlaufs. Antworte in 4–6 Sätzen als gültiges JSON-Objekt mit genau einem String-Feld namens "prediction".'
+              content: 'Schreibe auf Deutsch einen unterhaltsamen, trocken-humorvollen und leicht sarkastischen Fußball-Tipp aus der Perspektive eines leidenschaftlichen SC-Freiburg-Fans, ohne diese Perspektive ausdrücklich zu erwähnen. Nutze ausschließlich die übergebenen Teamnamen und die Information, dass sie heute gegeneinander spielen, erfinde keine Fakten und formuliere eine ausdrücklich spekulative Einschätzung in 2–3 Sätzen als gültiges JSON-Objekt mit genau einem String-Feld namens "prediction".'
             },
             {
               role: 'user',
