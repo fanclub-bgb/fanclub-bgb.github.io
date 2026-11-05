@@ -136,7 +136,7 @@ export default {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gpt-6-luna',
+          model: 'gpt-4.1-mini',
           messages: [
             {
               role: 'system',
