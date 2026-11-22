@@ -178,6 +178,7 @@ const navItems = [
       const eventList = document.querySelector<HTMLDivElement>('#event-list');
       const eventStatus = document.querySelector<HTMLParagraphElement>('#events-status');
       const matchOfDay = document.querySelector<HTMLElement>('#match-of-day');
+      const matchOfDayTitle = document.querySelector<HTMLHeadingElement>('#match-of-day-title');
       const matchOfDayFixture = document.querySelector<HTMLDivElement>('#match-of-day-fixture');
       const matchOfDayForecast = document.querySelector<HTMLDivElement>('#match-of-day-forecast');
       const forecastApiUrl = document.querySelector<HTMLMetaElement>('meta[name="match-forecast-api"]')?.content.trim() ?? '';
@@ -249,8 +250,27 @@ const navItems = [
       }
 
       function renderMatchOfDay(match: Match, date: Date) {
-        if (!matchOfDay || !matchOfDayFixture || !matchOfDayForecast) {
+        if (!matchOfDay || !matchOfDayTitle || !matchOfDayFixture || !matchOfDayForecast) {
           throw new Error('Match-of-the-day-Anzeige wurde nicht gefunden.');
+        }
+
+        const isMatchEvent = match.homeTeam.trim() !== '' || match.awayTeam.trim() !== '';
+        matchOfDayTitle.textContent = isMatchEvent ? 'Match of the day' : 'Event of the day';
+
+        if (!isMatchEvent) {
+          const event = document.createElement('div');
+          event.className = 'match-of-day-event';
+          const name = document.createElement('h3');
+          name.textContent = match.name.trim();
+          const startTime = document.createElement('p');
+          startTime.className = 'match-of-day-kickoff';
+          startTime.textContent = `Beginn ${new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(date)} Uhr`;
+
+          matchOfDayFixture.replaceChildren(event, matchOfDayForecast);
+          event.append(name, startTime);
+          matchOfDayForecast.hidden = true;
+          matchOfDay.hidden = false;
+          return;
         }
 
         const fixture = document.createElement('div');
@@ -280,6 +300,7 @@ const navItems = [
         fixture.append(kickoff);
 
         matchOfDayFixture.replaceChildren(fixture, matchOfDayForecast);
+        matchOfDayForecast.hidden = false;
         matchOfDay.hidden = false;
         void loadMatchForecast();
       }
@@ -382,11 +403,14 @@ const navItems = [
 
             const details = document.createElement('div');
             const title = document.createElement('h3');
-            title.textContent = `${match.homeTeam.replaceAll('_', ' ') === 'Freiburg' ? 'Gemeinsam ins Stadion' : 'Auswärtssieg'}: ${match.name.trim()}`;
+            const isMatchEvent = match.homeTeam.trim() !== '' || match.awayTeam.trim() !== '';
+            title.textContent = isMatchEvent
+              ? `${match.homeTeam.replaceAll('_', ' ').trim() === 'Freiburg' ? 'Gemeinsam ins Stadion' : 'Auswärtssieg'}: ${match.name.trim()}`
+              : match.name.trim();
             const subtitle = document.createElement('p');
             const kickoff = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(date);
             const doorOpening = match.doorOpeningTime.trim();
-            subtitle.textContent = `· Anpfiff ${kickoff} Uhr${doorOpening ? ` · Einlass ${doorOpening} Uhr` : ''}`;
+            subtitle.textContent = `· ${isMatchEvent ? 'Anpfiff' : 'Beginn'} ${kickoff} Uhr${doorOpening ? ` · Einlass ${doorOpening} Uhr` : ''}`;
             details.append(title, subtitle);
             row.append(eventDate, details);
             eventList.append(row);
