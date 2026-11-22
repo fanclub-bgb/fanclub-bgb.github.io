@@ -46,7 +46,7 @@ const navItems = [
         <div class="match-of-day-forecast" id="match-of-day-forecast" hidden></div>
       </section>
 
-      <section class="hero" aria-labelledby="hero-title" style={`--hero-image: url('${base}assets/titleimage.png')`}>
+      <section class="hero" aria-labelledby="hero-title" style={`--hero-image: url('${base}assets/logo.jpg')`}>
         <div class="hero-copy">
           <p class="eyebrow">Fanclub des SC Freiburg · Seit 2013</p>
           <h1 id="hero-title">Fußball.<br /><em>Freunde.</em><br />Freiburg.</h1>
@@ -56,7 +56,7 @@ const navItems = [
             <a class="text-link" href="#events">Was geht ab? <span aria-hidden="true">→</span></a>
           </div>
         </div>
-        <div class="hero-photo" role="img" aria-label="Flutlicht im Stadion"></div>
+        <div class="hero-photo" role="img" aria-label="Bier Guerilla Breisgau Logo"></div>
         <div class="hero-stamp">NUR DER<br /><strong>SCF</strong><br /><span>★</span></div>
       </section>
 
@@ -68,6 +68,9 @@ const navItems = [
         <div class="section-intro">
           <p class="eyebrow">01 / Wer wir sind</p>
           <h2>Mehr als ein<br /><em>Fanclub.</em></h2>
+          <div class="about-image">
+            <img src={`${base}assets/Schwimmnudeln.jpg`} alt="Fanclub-Mitglied mit Schwimmnudeln" />
+          </div>
         </div>
         <div class="about-content">
           <p class="statement">Wir geben unserem Lieblingsgetränk im Stadion einen gebührenden Auftritt.</p>
@@ -90,12 +93,14 @@ const navItems = [
       </section>
 
       <section class="membership" id="membership">
-        <div class="membership-image">
-          <img src={`${base}assets/BGB_Beitritt-FG_Mitgliedsantrag.svg`} alt="QR-Code für den BGB-Beitritt und FG-Mitgliedsantrag" />
-        </div>
-        <div class="membership-copy">
+        <div class="section-intro">
           <p class="eyebrow">03 / Komm dazu</p>
           <h2>Dein Platz<br />ist <em>hier.</em></h2>
+          <div class="membership-image">
+            <img src={`${base}assets/BGB_Beitritt-FG_Mitgliedsantrag.svg`} alt="QR-Code für den BGB-Beitritt und FG-Mitgliedsantrag" />
+          </div>
+        </div>
+        <div class="membership-copy">
           <p>Du willst Stadionatmosphäre, gute Laune und mit uns Bier trinken? Dann werde Teil der Bier Guerilla Breisgau. Der Mitgliedsbeitrag beträgt 20 EUR pro Saison.</p>
           <div class="document-links">
             <a class="button button-cream" href={`${base}assets/pdfs/BGB_Beitritt.pdf`} target="_blank">BGB Beitritt <span aria-hidden="true">↗</span></a>
