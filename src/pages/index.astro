@@ -89,8 +89,10 @@ const navItems = [
         </div>
       </section>
 
-      <section class="membership" id="membership" style={`--membership-image: url('${base}assets/laststadion.jpeg')`}>
-        <div class="membership-image"></div>
+      <section class="membership" id="membership">
+        <div class="membership-image">
+          <img src={`${base}assets/BGB_Beitritt-FG_Mitgliedsantrag.svg`} alt="QR-Code für den BGB-Beitritt und FG-Mitgliedsantrag" />
+        </div>
         <div class="membership-copy">
           <p class="eyebrow">03 / Komm dazu</p>
           <h2>Dein Platz<br />ist <em>hier.</em></h2>
@@ -108,6 +110,9 @@ const navItems = [
         <div class="section-intro">
           <p class="eyebrow">04 / Gemeinsam dabei</p>
           <h2>Unsere<br /><em id="member-count">Mitglieder.</em></h2>
+          <div class="members-image">
+            <img src={`${base}assets/laststadion.jpeg`} alt="Das Stadion bei Flutlicht" />
+          </div>
         </div>
         <div class="member-list" id="member-list">
           <p class="members-status" id="members-status" role="status" aria-live="polite">Mitglieder werden geladen …</p>
