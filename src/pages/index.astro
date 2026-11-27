@@ -346,7 +346,8 @@ const navItems = [
           const response = await fetch(endpoint);
           const data: unknown = await response.json();
           if (typeof data !== 'object' || data === null
-            || (response.ok && (!('prediction' in data) || typeof data.prediction !== 'string'))
+            || (response.ok && (!('prediction' in data) || typeof data.prediction !== 'string'
+              || !('weather' in data) || typeof data.weather !== 'string'))
             || (!response.ok && (!('error' in data) || typeof data.error !== 'string'))) {
             throw new Error('Die Prognose-API hat ein unerwartetes Datenformat zurückgegeben.');
           }
@@ -357,6 +358,12 @@ const navItems = [
           }
 
           status.textContent = data.prediction;
+          const weatherTitle = document.createElement('h3');
+          weatherTitle.textContent = 'Spekulatives Wetter';
+          const weatherStatus = document.createElement('p');
+          weatherStatus.className = 'match-of-day-forecast-status';
+          weatherStatus.textContent = data.weather;
+          matchOfDayForecast.replaceChildren(title, status, weatherTitle, weatherStatus, disclaimer);
         } catch (error) {
           console.error('Prognose konnte nicht geladen werden.', error);
           status.textContent = 'Die Prognose ist gerade nicht verfügbar.';

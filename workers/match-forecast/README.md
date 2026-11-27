@@ -1,6 +1,6 @@
 # Match-of-the-day forecast
 
-This Cloudflare Worker reads today's published match from the existing match API, requests a short speculative German-language tip from the OpenAI API, and caches the result for six hours. The OpenAI key is only stored as a Worker secret. Requests are limited to the configured site origins and five per IP per minute.
+This Cloudflare Worker reads today's published match from the existing match API, requests a short speculative and humorous German-language tip with a separate fictional weather section from the OpenAI API, and caches the result for six hours. The OpenAI key is only stored as a Worker secret. Requests are limited to the configured site origins and five per IP per minute.
 
 ## Deploy
 
